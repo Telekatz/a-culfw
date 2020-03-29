@@ -213,7 +213,7 @@ uint8_t
 cc1100_sendbyte(uint8_t data)
 {
 #ifdef USE_HAL
-  return spi_send(data);
+  return spi_send(data, CC_SPI);
 #else
   SPDR = data;		        // send byte
   while (!(SPSR & _BV (SPIF)));	// wait until transfer finished

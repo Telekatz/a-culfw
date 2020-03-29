@@ -51,15 +51,18 @@ extern SPI_HandleTypeDef hspi1;
 
 /* USER CODE END Private defines */
 
+typedef enum {
+  SPI_1 = 1,
+  SPI_2 = 2
+}SPI_port;
+
 extern void Error_Handler(void);
 
 void MX_SPI1_Init(void);
 
-uint8_t spi_send(uint8_t data);
-uint8_t spi2_send(uint8_t data);
-
-uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size);
-uint8_t spi2_receive_burst(uint8_t *pData, uint16_t Size);
+uint8_t spi_send(uint8_t data, SPI_port port);
+uint8_t spi_transmit_burst(uint8_t *pData, uint16_t Size, SPI_port port);
+uint8_t spi_receive_burst(uint8_t *pData, uint16_t Size, SPI_port port);
 
 /* USER CODE BEGIN Prototypes */
 /* USER CODE END Prototypes */

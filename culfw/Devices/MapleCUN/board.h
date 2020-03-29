@@ -69,6 +69,9 @@
 #define HAS_ONEWIRE             10        // OneWire Support
 #define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
+#define CC_SPI    SPI_1
+#define WIZ_SPI   SPI_2
+
 #define HAS_FHT_80b
 #define HAS_FHT_8v
 //#define HAS_RF_ROUTER

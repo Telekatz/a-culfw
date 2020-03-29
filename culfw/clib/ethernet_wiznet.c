@@ -59,11 +59,11 @@ void wizchip_deselect(void) {
 }
 
 uint8_t wizchip_read() {
-  return spi2_send( 0xff );
+  return spi_send( 0xff, WIZ_SPI );
 }
 
 void wizchip_write(uint8_t wb) {
-  spi2_send( wb );
+  spi_send( wb , WIZ_SPI);
 }
 
 void my_ip_assign(void) {

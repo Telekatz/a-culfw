@@ -6,7 +6,11 @@
 
 /* prototypes */
 void spi_init(void);
+#ifdef USE_HAL
+uint8_t spi_send(uint8_t data, SPI_port port);
+#else
 uint8_t spi_send(uint8_t data);
+#endif
 
 #define spi_wait()  while (!(SPSR & _BV(SPIF)))
 

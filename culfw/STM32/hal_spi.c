@@ -201,38 +201,49 @@ void spi_init(void) {
   MX_SPI2_Init();
 }
 
-uint8_t spi_send(uint8_t data)
+uint8_t spi_send(uint8_t data, SPI_port port)
 {
   uint8_t ret;
 
-  HAL_SPI_TransmitReceive(&hspi1, &data, &ret, 1, 100);
+  switch(port) {
+  case SPI_1:
+    HAL_SPI_TransmitReceive(&hspi1, &data, &ret, 1, 100);
+    break;
+  case SPI_2:
+    HAL_SPI_TransmitReceive(&hspi2, &data, &ret, 1, 100);
+    break;
+  }
+  return ret;
+}
+
+uint8_t spi_transmit_burst(uint8_t *pData, uint16_t Size, SPI_port port)
+{
+  uint8_t ret;
+
+  switch(port) {
+  case SPI_1:
+    ret = HAL_SPI_Transmit(&hspi1, pData, Size, 100);
+    break;
+  case SPI_2:
+    ret = HAL_SPI_Transmit(&hspi2, pData, Size, 100);
+    break;
+  }
 
   return ret;
 }
 
-uint8_t spi2_send(uint8_t data)
+uint8_t spi_receive_burst(uint8_t *pData, uint16_t Size, SPI_port port)
 {
   uint8_t ret;
 
-  HAL_SPI_TransmitReceive(&hspi2, &data, &ret, 1, 100);
-
-  return ret;
-}
-
-uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size)
-{
-  uint8_t ret;
-
-  ret = HAL_SPI_Transmit(&hspi2, pData, Size, 100);
-
-  return ret;
-}
-
-uint8_t spi2_receive_burst(uint8_t *pData, uint16_t Size)
-{
-  uint8_t ret;
-
-  ret = HAL_SPI_Receive(&hspi2, pData, Size, 100);
+  switch(port) {
+  case SPI_1:
+    ret = HAL_SPI_Receive(&hspi1, pData, Size, 100);
+    break;
+  case SPI_2:
+    ret = HAL_SPI_Receive(&hspi2, pData, Size, 100);
+    break;
+  }
 
   return ret;
 }

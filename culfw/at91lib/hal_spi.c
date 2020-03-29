@@ -1,5 +1,6 @@
 #include "board.h"
 #include <stdint.h>
+#include "hal_spi.h"
 
 void spi_init(void) {
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_SPI0);
@@ -17,10 +18,14 @@ void spi_init(void) {
   AT91C_BASE_SPI0->SPI_CSR[0] = AT91C_SPI_NCPHA | (48<<8);
 }
 
-uint8_t spi_send(uint8_t data) {
+uint8_t spi_send(uint8_t data, SPI_port port) {
   // Send data
-  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_TXEMPTY) == 0);
-  AT91C_BASE_SPI0->SPI_TDR = data;
-  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
-  return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
+  switch(port) {
+  case SPI_0:
+    while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_TXEMPTY) == 0);
+    AT91C_BASE_SPI0->SPI_TDR = data;
+    while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
+    return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
+    break;
+  }
 }
