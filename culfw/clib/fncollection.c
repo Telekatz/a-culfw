@@ -378,6 +378,8 @@ prepare_boot(char *in)
 	}
 	PWR->CR &=~ PWR_CR_DBP;
 
+	wdt_enable(WDTO_2S);
+
 	while (1);                 // go to bed, the wathchdog will take us to reset
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
@@ -428,6 +430,11 @@ version(char *in)
   } else {
      DS_P( PSTR(" (F-Band: 868MHz)") );
   }
+#ifdef HAS_I2CSLAVE
+		DS_P( PSTR(" (I2C: 0x") );
+		display_hex2(i2cSlaveAddr);
+		DS_P( PSTR(")") );
+#endif	
   DNL();
 }
 

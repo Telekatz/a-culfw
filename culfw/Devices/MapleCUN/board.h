@@ -6,7 +6,7 @@
 
 #define LONG_PULSE
 
-#define TTY_BUFSIZE          256      // RAM: TTY_BUFSIZE*4
+#define TTY_BUFSIZE          512      // RAM: TTY_BUFSIZE*4
 
 #if defined MapleCUNx4 || defined MapleCUNx4_BL
 #define BOARD_NAME          "MapleCUNx4"
@@ -62,9 +62,12 @@
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#define UART_BAUD_RATE          115200
+#define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
+#define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -94,6 +97,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 #define HAS_RFNATIVE
+#define LACROSSE_HMS_EMU
 #define HAS_ZWAVE
 #define HAS_MBUS
 #define HAS_BETTY
@@ -152,12 +156,6 @@
                           { {CC1100_3_OUT_BASE, CC1100_3_CS_BASE, CC1100_3_IN_BASE},\
                             {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  },\
                           }
-
-//TWI
-#define TWI_SCL_PIN       CC1100_2_IN_PIN
-#define TWI_SCL_BASE      CC1100_2_IN_BASE
-#define TWI_SDA_PIN       CC1100_2_CS_PIN
-#define TWI_SDA_BASE      CC1100_2_CS_BASE
 
 #ifdef HAS_WIZNET
 #ifndef _WIZCHIP_

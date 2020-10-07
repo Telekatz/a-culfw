@@ -316,6 +316,7 @@ const t_fntab fntab1[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+  { 'x', ccsetpa },
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
@@ -333,6 +334,10 @@ const t_fntab fntab2[] = {
   { 'b', rf_mbus_func },
 #endif
   { 'C', ccreg },
+  { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
@@ -345,12 +350,20 @@ const t_fntab fntab2[] = {
 #ifdef HAS_RWE
   { 'E', rwe_func },
 #endif
+  { 'G', rawsend },
+  { 'M', em_send },
+  { 'K', ks_send },
 #ifdef HAS_MAICO
   { 'L', maico_func },
+#endif
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
 #endif
 #ifdef HAS_SOMFY_RTS
   { 'Y', somfy_rts_func },
 #endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
   { 'V', version },
 #if NUM_SLOWRF > 2
   { 'W', write_eeprom },
@@ -359,6 +372,7 @@ const t_fntab fntab2[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+  { 'x', ccsetpa },
 #ifdef HAS_BETTY
   { 'y', betty_func },
 #endif
@@ -526,6 +540,11 @@ int main(void)
 
   // Main loop
   while (1) {
+
+#ifdef HAS_UART
+    if(!USB_IsConnected)
+      uart_task();
+#endif
 
     CDC_Task();
     Minute_Task();

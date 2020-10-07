@@ -42,6 +42,7 @@
 #ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
+#include "atomic.h"
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -133,7 +134,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -158,7 +159,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART2_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
   else if(uartHandle->Instance==USART3)
@@ -181,7 +182,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART3_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   }
 }
@@ -221,6 +222,20 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   }
 } 
 
+__weak void UART_Tx_Callback(void)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+}
+
+__weak void UART_Rx_Callback(uint8_t data)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+}
+
 __weak void UART2_Rx_Callback(uint8_t data)
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
@@ -239,17 +254,27 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
 
   if(UartHandle->Instance==USART1) {
+#ifdef HAS_UART
+    UART_Rx_Callback(inbyte1);
+#else
     DBGU_RxByte = inbyte1;
     DBGU_RxReady = 1;
-    HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
+#endif
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
+    }
 
   } else if(UartHandle->Instance==USART2) {
     UART2_Rx_Callback(inbyte2);
-    HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
+    }
 
   } else if(UartHandle->Instance==USART3) {
     UART3_Rx_Callback(inbyte3);
-    HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
+    }
 
   }
 
@@ -261,7 +286,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   if(UartHandle->Instance==USART1) {
-
+#ifdef HAS_UART
+    UART_Tx_Callback();
+#endif
   } else if(UartHandle->Instance==USART2) {
     CDC_Receive_next(CDC1);
 #ifdef HAS_WIZNET
@@ -290,6 +317,9 @@ void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate) {
   case 1:
     UartHandle = &huart3;
     break;
+  case UART_NUM:
+    UartHandle = &huart1;
+    break;
   default:
     return;
   }
@@ -310,15 +340,60 @@ uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num) {
 }
 
 void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len) {
+  ATOMIC_BLOCK() {
+    switch(UART_num) {
+    case 0:
+      HAL_UART_Transmit_IT(&huart2, Buf, Len);
+      break;
+    case 1:
+      HAL_UART_Transmit_IT(&huart3, Buf, Len);
+      break;
+    case UART_NUM:
+      HAL_UART_Transmit_IT(&huart1, Buf, Len);
+      break;
+    }
+  }
+  return;
+}
+
+void HAL_UART_init(uint8_t UART_num) {
   switch(UART_num) {
   case 0:
-    HAL_UART_Transmit_IT(&huart2, Buf, Len);
+    MX_USART2_UART_Init();
     break;
   case 1:
-    HAL_UART_Transmit_IT(&huart3, Buf, Len);
+    MX_USART3_UART_Init();
+    break;
+  case UART_NUM:
+    MX_USART1_UART_Init();
     break;
   }
   return;
+}
+
+uint8_t HAL_UART_TX_is_idle(uint8_t UART_num) {
+  UART_HandleTypeDef *UartHandle;
+
+
+  switch(UART_num) {
+  case 0:
+    UartHandle = &huart2;
+    break;
+  case 1:
+    UartHandle = &huart3;
+    break;
+  case UART_NUM:
+    UartHandle = &huart1;
+    break;
+  default:
+    return 0;
+  }
+
+   if((UartHandle->State == HAL_UART_STATE_READY) || (UartHandle->State == HAL_UART_STATE_BUSY_RX)) {
+     return 1;
+   }
+
+  return 0;
 }
 
 /**

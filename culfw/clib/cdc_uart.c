@@ -21,6 +21,7 @@
 #include "display.h"
 #include "fncollection.h"
 #include "stringfunc.h"
+#include "clock.h"
 
 #ifdef CDC_COUNT
 
@@ -30,11 +31,13 @@ rb_t UART_Rx_Buffer[CDC_COUNT-1];
 
 uint8_t CDCDSerialDriver_Receive_Callback1(uint8_t* Buf, uint32_t *Len) {
   HAL_UART_Write(0, Buf, (uint16_t)*Len);
+  TRACE_DEBUG_WP("1:UART_TX: %d\r\n", (uint16_t)*Len);
   return 0;
 }
 
 uint8_t CDCDSerialDriver_Receive_Callback2(uint8_t* Buf, uint32_t *Len) {
   HAL_UART_Write(1, Buf, (uint16_t)*Len);
+  TRACE_DEBUG_WP("2:UART_TX: %d\r\n", (uint16_t)*Len);
   return 0;
 }
 
@@ -82,8 +85,8 @@ uint32_t EE_read_baud(uint8_t num) {
 #endif
 
 void cdc_uart_init(void) {
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
+  HAL_UART_init(0);
+  HAL_UART_init(1);
 
 #ifdef HAS_WIZNET
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
@@ -96,6 +99,7 @@ void cdc_uart_init(void) {
 
 
 void cdc_uart_task(void) {
+static uint32_t lasttick[CDC_COUNT] = {0};
 
 #if CDC_COUNT > 1
   for(uint8_t x = 0;x<CDC_COUNT-1;x++) {
@@ -106,30 +110,37 @@ void cdc_uart_task(void) {
     }
 
     if(CDC_Tx_len[x]) {
-      int32_t ret;
-      if(CDC_isConnected(CDC1+x)) {
-        ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);
-        if( ret == USBD_STATUS_SUCCESS) {
-          #ifdef HAS_WIZNET
-          TRACE_DEBUG_WP("%d:NET_UART_RECEIVE1: %d\r\n",x+1, CDC_Tx_len[x]);
-#ifdef USE_HW_AUTODETECT
-          if(has_ethernet())
-#endif
-            Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
+      if(CDC_Tx_len[x] == CDC_DATA_HS_MAX_PACKET_SIZE || (HAL_GetTick() - lasttick[x] > 4) ) {
+        int32_t ret;
+        if(CDC_isConnected(CDC1+x)) {
+          ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);
+          if( ret == USBD_STATUS_SUCCESS) {
+            #ifdef HAS_WIZNET
+            TRACE_DEBUG_WP("%d:NET_UART_RECEIVE1: %d\r\n",x+1, CDC_Tx_len[x]);
+  #ifdef USE_HW_AUTODETECT
+            if(has_ethernet())
+  #endif
+              Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
 
+            #endif
+            CDC_Tx_len[x]=0;
+          } else {
+            TRACE_DEBUG_WP("%d:USBD FAIL1\r\n",x+1);
+          }
+        } else {
+          #ifdef HAS_WIZNET
+          TRACE_DEBUG_WP("%d:NET_UART_RECEIVE2: %d\r\n",x+1, CDC_Tx_len[x]);
+  #ifdef USE_HW_AUTODETECT
+          if(has_ethernet())
+  #endif
+            Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
           #endif
           CDC_Tx_len[x]=0;
         }
-      } else {
-        #ifdef HAS_WIZNET
-        TRACE_DEBUG_WP("%d:NET_UART_RECEIVE2: %d\r\n",x+1, CDC_Tx_len[x]);
-#ifdef USE_HW_AUTODETECT
-        if(has_ethernet())
-#endif
-          Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
-        #endif
-        CDC_Tx_len[x]=0;
+        lasttick[x] = HAL_GetTick();
       }
+    } else {
+      lasttick[x] = HAL_GetTick();
     }
   }
 #endif
@@ -153,13 +164,14 @@ void cdc_uart_func(char *in) {
     uint32_t baud;
     uint8_t num;
     in[3] = 0;
-    fromdec(in+2,&num);
+    fromdec8(in+2,&num);
     fromdec32(in+4,&baud);
     TRACE_DEBUG("UART set Baud: %u@%u\n\r", num,baud);
     HAL_UART_Set_Baudrate(num,baud);
 
 #ifdef HAS_WIZNET
   } else if (in[1] == 's') {  // store baudrate
+    TRACE_DEBUG("UART store Baud\n\r");
     EE_write_baud(0,HAL_UART_Get_Baudrate(0));
     EE_write_baud(1,HAL_UART_Get_Baudrate(1));
 #endif

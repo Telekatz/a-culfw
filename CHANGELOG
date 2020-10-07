@@ -1,5 +1,49 @@
 ## Changelog:
 
+#### 1.26.08
+- MapleCUN: Fix serial2net
+
+#### 1.26.07
+- MapleCUN/CUBe: MSC bootloader
+- CUBe: Bugfix HW autodetect
+
+#### 1.26.06
+- MapleCUN/CUBe: Bugfix repeated messages filter
+- MapleCUN/CUBe: Autodetect onewire on any CC port
+- MapleCUN: Changed to bus powered USB configuration descriptor
+
+#### 1.26.05
+- MapleCUN: Fix CDC
+
+#### 1.26.04
+- CUBe: added HMS Device Emulation for LaCrosse
+
+#### 1.26.03
+- I2CCUL: changed Protocol definition
+- MapleCUN: added LaCrosse
+- MapleCUN: added HMS Device Emulation for LaCrosse
+- miniCUL: added Optiboot bootloader
+- rpiaddon: added OneWire
+
+#### 1.26.02
+- MapleCUN/CUBe: add UART HAL
+- MapleCUN/CUBe: increase MAX_CREDIT to 3600
+- MapleCUN: Move serial console to DBG UART if USB is not connected
+- MapleCUN: Some bugfix
+
+#### 1.26.01
+- MapleCUN/CUBe: Fix SlowRF/ethernet keepalive
+
+#### 1.26.00
+- Add I2C slave
+- Add I2CCUL: Example device for communication over I2C
+
+#### 1.25.02
+- megaCUL: changed buffer size
+
+#### 1.25.01
+- MapleCUN: Fix baud rate setting command
+
 #### 1.25.00
 - ARM Models: 
   - Add onewire

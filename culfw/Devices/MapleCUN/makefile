@@ -57,6 +57,7 @@ SRCS += ../../clib/rf_mode.c
 SRCS += ../../clib/rf_betty.c
 SRCS += ../../clib/rf_moritz.c
 SRCS += ../../clib/rf_native.c
+SRCS += ../../clib/lacrosse.c
 SRCS += ../../clib/rf_router.c
 SRCS += ../../clib/rf_receive_bucket.c
 SRCS += ../../clib/rf_receive_esa.c
