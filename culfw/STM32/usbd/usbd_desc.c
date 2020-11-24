@@ -65,7 +65,7 @@
 //#define USBD_PID_FS                             0x0001
 
 
-#define USBD_PRODUCT_STRING_FS        (uint8_t*)"MapleCUL"
+#define USBD_PRODUCT_STRING_FS        (uint8_t*)"MapleCUN"
 #define USBD_CONFIGURATION_STRING_FS  (uint8_t*)"CDC Config"
 #define USBD_INTERFACE_STRING_FS      (uint8_t*)"CDC Interface"
 

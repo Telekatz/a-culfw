@@ -131,6 +131,9 @@ static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 
 uint8_t  *USBD_CDC_GetDeviceQualifierDescriptor (uint16_t *length);
 
+uint8_t *USBD_CDC_GetUsrStrDescriptor(struct _USBD_HandleTypeDef *pdev ,uint8_t index,  uint16_t *length);   
+
+
 /* USB Standard Device Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_CDC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] __ALIGN_END =
 {
@@ -172,6 +175,7 @@ USBD_ClassTypeDef  USBD_CDC =
   USBD_CDC_GetFSCfgDesc,    
   USBD_CDC_GetOtherSpeedCfgDesc, 
   USBD_CDC_GetDeviceQualifierDescriptor,
+  USBD_CDC_GetUsrStrDescriptor
 };
 
 /* USB CDC device Configuration Descriptor */
@@ -180,8 +184,8 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgHSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
   /*Configuration Descriptor*/
   0x09,   /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-  USB_CDC_CONFIG_DESC_SIZ,                /* wTotalLength:no of returned bytes */
-  0x00,
+  LOBYTE(USB_CDC_CONFIG_DESC_SIZ),                /* wTotalLength:no of returned bytes */
+  HIBYTE(USB_CDC_CONFIG_DESC_SIZ),
   USB_NUM_INTERFACES,   /* bNumInterfaces: 4 interface */
   0x01,   /* bConfigurationValue: Configuration value */
   0x00,   /* iConfiguration: Index of string descriptor describing the configuration */
@@ -287,7 +291,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgHSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
   0x02, // bFunctionClass: CDC
   0x02, // bFunctionSubClass
   0x01, // bFunctionProtocol
-  0x02, // iFunction
+  0x21, // iFunction
 
   /*Interface Descriptor */
   0x09,   /* bLength: Interface Descriptor size */
@@ -377,7 +381,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgHSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
   0x02, // bFunctionClass: CDC
   0x02, // bFunctionSubClass
   0x01, // bFunctionProtocol
-  0x02, // iFunction
+  0x31, // iFunction
 
   /*Interface Descriptor */
   0x09,   /* bLength: Interface Descriptor size */
@@ -807,6 +811,22 @@ uint8_t  *USBD_CDC_GetDeviceQualifierDescriptor (uint16_t *length)
 {
   *length = sizeof (USBD_CDC_DeviceQualifierDesc);
   return USBD_CDC_DeviceQualifierDesc;
+}
+
+#if defined ( __ICCARM__ ) /*!< IAR Compiler */
+  #pragma data_alignment=4
+#endif
+__ALIGN_BEGIN uint8_t USBD_StrDesc[USBD_MAX_STR_DESC_SIZ] __ALIGN_END;
+
+
+uint8_t *USBD_CDC_GetUsrStrDescriptor(struct _USBD_HandleTypeDef *pdev, uint8_t index, uint16_t *length)
+{
+  switch (index) {
+    case 0x02: USBD_GetString((uint8_t*)"MapleCUN", USBD_StrDesc, length); break;
+    case 0x21: USBD_GetString((uint8_t*)"MapleCUN Serial1", USBD_StrDesc, length); break;
+    case 0x31: USBD_GetString((uint8_t*)"MapleCUN Serial2", USBD_StrDesc, length); break;
+  }
+  return USBD_StrDesc;
 }
 
 /**

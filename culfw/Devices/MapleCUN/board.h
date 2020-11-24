@@ -56,6 +56,8 @@
 
 #define ARM
 
+#define DCHP_HOST_NAME 			"MapleCUN"
+
 #define HAS_USB
 //#define USB_FIX_SERIAL          "012345"
 #define CDC_COUNT               3
