@@ -1,5 +1,10 @@
 ## Changelog:
 
+#### 1.26.09
+- MapleCUN/CUBe: Fix CC1101 detection
+- MapleCUN: Make SPI port configurable
+- MapleCUN(W5500): Resol VBus LAN adapter emulation added
+
 #### 1.26.08
 - MapleCUN: Fix serial2net
 
