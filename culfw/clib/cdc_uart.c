@@ -15,7 +15,7 @@
 #ifdef HAS_WIZNET
 #include <socket.h>
 #include "hw_autodetect.h"
-
+#include "vbus_lan.h"
 #include "ethernet.h"
 #endif
 #include "display.h"
@@ -97,6 +97,15 @@ void cdc_uart_init(void) {
 #endif
 }
 
+void cdc_send_ethernet(uint8_t *data, uint16_t size,  uint8_t cdc) {
+#ifdef HAS_WIZNET
+  TRACE_DEBUG_WP("%d:NET_UART_RECEIVE: %d\r\n",x+1, CDC_Tx_len[x]);
+#ifdef USE_HW_AUTODETECT
+  if(has_ethernet())
+#endif
+    Net_Write(CDC_Tx_buffer[cdc], CDC_Tx_len[cdc], 1+cdc);
+#endif
+}
 
 void cdc_uart_task(void) {
 static uint32_t lasttick[CDC_COUNT] = {0};
@@ -115,25 +124,18 @@ static uint32_t lasttick[CDC_COUNT] = {0};
         if(CDC_isConnected(CDC1+x)) {
           ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);
           if( ret == USBD_STATUS_SUCCESS) {
-            #ifdef HAS_WIZNET
-            TRACE_DEBUG_WP("%d:NET_UART_RECEIVE1: %d\r\n",x+1, CDC_Tx_len[x]);
-  #ifdef USE_HW_AUTODETECT
-            if(has_ethernet())
-  #endif
-              Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
-
+            cdc_send_ethernet(CDC_Tx_buffer[x], CDC_Tx_len[x], x);
+            #ifdef VBUS_LAN
+            send_vbus_data(CDC_Tx_buffer[x], CDC_Tx_len[x], x);
             #endif
             CDC_Tx_len[x]=0;
           } else {
             TRACE_DEBUG_WP("%d:USBD FAIL1\r\n",x+1);
           }
         } else {
-          #ifdef HAS_WIZNET
-          TRACE_DEBUG_WP("%d:NET_UART_RECEIVE2: %d\r\n",x+1, CDC_Tx_len[x]);
-  #ifdef USE_HW_AUTODETECT
-          if(has_ethernet())
-  #endif
-            Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
+          cdc_send_ethernet(CDC_Tx_buffer[x], CDC_Tx_len[x], x);
+          #ifdef VBUS_LAN
+          send_vbus_data(CDC_Tx_buffer[x], CDC_Tx_len[x], x);
           #endif
           CDC_Tx_len[x]=0;
         }

@@ -32,6 +32,7 @@
 #define HAS_WIZNET
 #define _WIZCHIP_           5500
 #define USE_HW_AUTODETECT
+#define VBUS_LAN            0
 
 #elif defined MapleCULx4 || defined MapleCULx4_BL
 #define BOARD_NAME          "MapleCULx4"

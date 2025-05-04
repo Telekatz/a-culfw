@@ -76,6 +76,7 @@ SRCS += ../../clib/somfy_rts.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/ttydata.c
 SRCS += ../../clib/onewire.c
+SRCS += ../../clib/vbus_lan.c
 
 SRCS += ../../clib/ethernet_wiznet.c
 

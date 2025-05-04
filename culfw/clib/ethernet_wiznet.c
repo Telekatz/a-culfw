@@ -18,6 +18,9 @@
 #include "spi.h"
 #include "stringfunc.h"
 #include "ttydata.h"
+#ifdef VBUS_LAN
+#include "vbus_lan.h"
+#endif
 
 //////////////////////////////////////////////////
 // Socket & Port number definition for Examples //
@@ -272,6 +275,8 @@ int32_t rxtx(uint8_t net_num) {
   return 1;
 }
 
+
+
 // TCP Server - does keep the sockets listening
 //
 int32_t tcp_server(uint8_t sn, uint16_t port) {
@@ -285,10 +290,18 @@ int32_t tcp_server(uint8_t sn, uint16_t port) {
       destport = getSn_DPORT(sn);
       TRACE_INFO_WP("%d:Connected - %d.%d.%d.%d : %d\r\n",sn, destip[0], destip[1], destip[2], destip[3], destport);
       setSn_IR(sn,Sn_IR_CON);
+#ifdef VBUS_LAN
+      if(sn == SOCK_VBUS)
+        init_vbus();
+#endif
     }
 
     if (sn == 0) {
       return rxtx_0();
+#ifdef VBUS_LAN
+    } else if(sn == SOCK_VBUS) {
+      return rxtx_vbus();
+#endif
     } else if(sn <= NET_COUNT) {
       return rxtx(sn-1);
     }
@@ -378,6 +391,9 @@ void Ethernet_Task(void) {
 #endif
 #if NET_COUNT > 1
   tcp_server( 2, 2325 );
+#endif
+#ifdef VBUS_LAN
+  tcp_server( SOCK_VBUS, 7053 );
 #endif
 }
 
