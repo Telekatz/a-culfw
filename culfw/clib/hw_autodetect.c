@@ -49,6 +49,14 @@ void hw_autodetect(void) {
 
   for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {
     hal_CC_GDO_init(CC1101.instance,INIT_MODE_IN_CS_IN);
+
+    CC1100_DEASSERT;                           // Toggle chip select signal
+    my_delay_us(30);
+    CC1100_ASSERT;
+    my_delay_us(30);
+    CC1100_DEASSERT;
+    my_delay_us(45);
+
     ccStrobe( CC1100_SRES );                   // Send SRES command
     my_delay_us(100);
   }
