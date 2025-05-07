@@ -1,6 +1,7 @@
 #include "board.h"
 #include <stdint.h>
 #include "hal_spi.h"
+#include "delay.h"
 
 void spi_init(void) {
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_SPI0);
@@ -28,4 +29,22 @@ uint8_t spi_send(uint8_t data, SPI_port port) {
     return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
     break;
   }
+  return 0;
+}
+
+uint8_t spi_wait_SO_low(SPI_port port) {
+  uint32_t pin;
+  uint8_t timeout = 0xff;
+
+  while(timeout--) {
+    my_delay_us(5);
+    switch(port) {
+    case SPI_0:
+      pin = (AT91C_BASE_PIOA->PIO_PDSR) & SPI_MISO;
+      break;
+    }
+    if(pin == 0)
+      return timeout;
+  }
+  return 0;
 }

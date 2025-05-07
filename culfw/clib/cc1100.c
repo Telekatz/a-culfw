@@ -240,15 +240,28 @@ ccInitChip(uint8_t *cfg)
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
-  CC1100_ASSERT;
-  my_delay_us(30);
-  CC1100_DEASSERT;
-  my_delay_us(45);
 
+  CC1100_ASSERT;
+  my_delay_us(10);
+
+  CC1100_DEASSERT;
+  my_delay_us(30);
+
+  CC1100_ASSERT;
+#ifdef USE_HAL
+  spi_wait_SO_low(CC_SPI);
+  ccStrobe( CC1100_SRES );
+  CC1100_ASSERT;                            // Send SRES command
+  spi_wait_SO_low(CC_SPI);
+#else
+  my_delay_us(100);
   ccStrobe( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
-  CC1100_ASSERT;                             // load configuration
+  CC1100_ASSERT;
+#endif
+
+  // load configuration
   cc1100_sendbyte( 0 | CC1100_WRITE_BURST );
   for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
     cc1100_sendbyte(erb(cfg++));

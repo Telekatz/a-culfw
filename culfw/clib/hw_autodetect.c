@@ -48,17 +48,27 @@ detect_ds2482(void)
 void hw_autodetect(void) {
 
   for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {
-    hal_CC_GDO_init(CC1101.instance,INIT_MODE_IN_CS_IN);
+    uint32_t timeout;
 
+    hal_CC_GDO_init(CC1101.instance,INIT_MODE_IN_CS_IN);
     CC1100_DEASSERT;                           // Toggle chip select signal
     my_delay_us(30);
+
     CC1100_ASSERT;
-    my_delay_us(30);
+    my_delay_us(10);
+
     CC1100_DEASSERT;
-    my_delay_us(45);
+    my_delay_us(30);
+
+    CC1100_ASSERT;
+    timeout = spi_wait_SO_low(CC_SPI);
+    TRACE_INFO("SO timeout1 CC%x: 0x%04x \n\r", CC1101.instance, timeout);
 
     ccStrobe( CC1100_SRES );                   // Send SRES command
-    my_delay_us(100);
+    CC1100_ASSERT;
+    timeout = spi_wait_SO_low(CC_SPI);
+    TRACE_INFO("SO timeout2 CC%x: 0x%04x \n\r", CC1101.instance, timeout);
+    CC1100_DEASSERT;
   }
 
   for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {

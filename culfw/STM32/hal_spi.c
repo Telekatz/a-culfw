@@ -39,6 +39,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "board.h"
+#include "delay.h"
 /* USER CODE END 0 */
 
 SPI_HandleTypeDef hspi1;
@@ -114,7 +115,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI1_MspInit 1 */
@@ -142,7 +143,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI2_MspInit 1 */
@@ -246,6 +247,26 @@ uint8_t spi_receive_burst(uint8_t *pData, uint16_t Size, SPI_port port)
   }
 
   return ret;
+}
+
+uint8_t spi_wait_SO_low(SPI_port port) {
+  uint32_t pin = 1;
+  uint8_t timeout = 0xff;
+
+  while(timeout--) {
+    my_delay_us(5);
+    switch(port) {
+    case SPI_1:
+      pin = (GPIOA->IDR) & _BV(6);
+      break;
+    case SPI_2:
+      pin = (GPIOB->IDR) & _BV(14);
+      break;
+    }
+    if(pin == 0)
+      return timeout;
+  }
+  return 0;
 }
 
 /* USER CODE END 1 */
