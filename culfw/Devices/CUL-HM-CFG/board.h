@@ -28,6 +28,8 @@
 #define USE_RF_MODE
 #define USE_HAL
 
+#define CC_SPI    SPI_0
+
 #define HAS_FHT_80b
 #define HAS_FHT_8v
 //#define HAS_RF_ROUTER
