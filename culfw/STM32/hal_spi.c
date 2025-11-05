@@ -39,6 +39,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "board.h"
+#include "delay.h"
 /* USER CODE END 0 */
 
 SPI_HandleTypeDef hspi1;
@@ -114,7 +115,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI1_MspInit 1 */
@@ -142,7 +143,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI2_MspInit 1 */
@@ -201,40 +202,71 @@ void spi_init(void) {
   MX_SPI2_Init();
 }
 
-uint8_t spi_send(uint8_t data)
+uint8_t spi_send(uint8_t data, SPI_port port)
 {
   uint8_t ret;
 
-  HAL_SPI_TransmitReceive(&hspi1, &data, &ret, 1, 100);
+  switch(port) {
+  case SPI_1:
+    HAL_SPI_TransmitReceive(&hspi1, &data, &ret, 1, 100);
+    break;
+  case SPI_2:
+    HAL_SPI_TransmitReceive(&hspi2, &data, &ret, 1, 100);
+    break;
+  }
+  return ret;
+}
+
+uint8_t spi_transmit_burst(uint8_t *pData, uint16_t Size, SPI_port port)
+{
+  uint8_t ret;
+
+  switch(port) {
+  case SPI_1:
+    ret = HAL_SPI_Transmit(&hspi1, pData, Size, 100);
+    break;
+  case SPI_2:
+    ret = HAL_SPI_Transmit(&hspi2, pData, Size, 100);
+    break;
+  }
 
   return ret;
 }
 
-uint8_t spi2_send(uint8_t data)
+uint8_t spi_receive_burst(uint8_t *pData, uint16_t Size, SPI_port port)
 {
   uint8_t ret;
 
-  HAL_SPI_TransmitReceive(&hspi2, &data, &ret, 1, 100);
+  switch(port) {
+  case SPI_1:
+    ret = HAL_SPI_Receive(&hspi1, pData, Size, 100);
+    break;
+  case SPI_2:
+    ret = HAL_SPI_Receive(&hspi2, pData, Size, 100);
+    break;
+  }
 
   return ret;
 }
 
-uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size)
-{
-  uint8_t ret;
+uint8_t spi_wait_SO_low(SPI_port port) {
+  uint32_t pin = 1;
+  uint8_t timeout = 0xff;
 
-  ret = HAL_SPI_Transmit(&hspi2, pData, Size, 100);
-
-  return ret;
-}
-
-uint8_t spi2_receive_burst(uint8_t *pData, uint16_t Size)
-{
-  uint8_t ret;
-
-  ret = HAL_SPI_Receive(&hspi2, pData, Size, 100);
-
-  return ret;
+  while(timeout--) {
+    my_delay_us(5);
+    switch(port) {
+    case SPI_1:
+      pin = (GPIOA->IDR) & _BV(6);
+      break;
+    case SPI_2:
+      pin = (GPIOB->IDR) & _BV(14);
+      break;
+    }
+    if(pin == 0)
+      return timeout;
+  }
+  return 0;
 }
 
 /* USER CODE END 1 */

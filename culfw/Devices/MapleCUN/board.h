@@ -32,6 +32,7 @@
 #define HAS_WIZNET
 #define _WIZCHIP_           5500
 #define USE_HW_AUTODETECT
+#define VBUS_LAN            0
 
 #elif defined MapleCULx4 || defined MapleCULx4_BL
 #define BOARD_NAME          "MapleCULx4"
@@ -56,6 +57,8 @@
 
 #define ARM
 
+#define DCHP_HOST_NAME 			"MapleCUN"
+
 #define HAS_USB
 //#define USB_FIX_SERIAL          "012345"
 #define CDC_COUNT               3
@@ -68,6 +71,9 @@
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
 #define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
+
+#define CC_SPI    SPI_1
+#define WIZ_SPI   SPI_2
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v

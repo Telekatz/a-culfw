@@ -44,6 +44,8 @@
 #endif
 #define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
+#define CC_SPI    SPI_0
+
 #define HAS_FHT_80b
 #define HAS_FHT_8v
 //#define HAS_RF_ROUTER

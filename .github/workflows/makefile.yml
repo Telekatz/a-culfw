@@ -1,0 +1,78 @@
+name: Makefile CI
+
+on:
+  workflow_dispatch: # Dieser Trigger ermöglicht manuelles Starten
+  push:
+    tags:
+      - "*.*.*"
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/work/gcc-arm-none-eabi-6_2-2016q4
+        key: ${{ runner.os }}-gcc-arm-none-eabi
+        restore-keys: |
+          ${{ runner.os }}-gcc-arm-none-eabi
+
+    - name: Install dependencies
+      run: |
+        sudo apt install gcc-avr avr-libc 
+
+        if [ ! -d "/home/runner/work/gcc-arm-none-eabi-6_2-2016q4" ]; then
+          wget -P /home/runner/work https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2
+          tar xjf /home/runner/work/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2 -C /home/runner/work
+        fi
+        
+    - name: Make a-culfw
+      run: |
+          export PATH=$PATH:/home/runner/work/gcc-arm-none-eabi-6_2-2016q4/bin
+          cd culfw
+          BUILD_TIMESTAMP=`date +'%Y-%m-%d_%H-%M-%S'`
+          BUILD_NUMBER=$(echo ${{ github.repository }}:${{ github.run_number }} | sed 's/[\/&]/\\&/g')
+          echo $BUILD_NUMBER
+          sed -i "s/BUILD_DATE.*/BUILD_DATE \"$BUILD_TIMESTAMP\"/" version.h
+          sed -i "s/BUILD_NUMBER.*/BUILD_NUMBER \"$BUILD_NUMBER\"/" version.h
+          cd Devices
+          make
+
+    - name: ZIP files
+      run: |
+          cd culfw/Devices
+          ZIPNAME=a-culfw_${{ github.ref_name }}.zip
+          find . -name "*.hex" -exec zip -u "../../../../${ZIPNAME}" {} \;
+          find . -name "*.bin" -exec zip -u "../../../../${ZIPNAME}" {} \;
+          find . -name "README*" -exec zip -u "../../../../${ZIPNAME}" {} \;
+          find . -name "*.sh" -exec zip -u "../../../../${ZIPNAME}" {} \;
+          cd ../../
+          zip -u "../../${ZIPNAME}" CHANGELOG
+          zip -u "../../${ZIPNAME}" LICENSE
+          zip -u "../../${ZIPNAME}" README.md
+    
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: a-culfw
+        path: |
+          culfw/Devices/**/*.hex
+          culfw/Devices/**/*.bin
+          culfw/Devices/**/README*
+          culfw/Devices/**/*.sh
+          CHANGELOG
+          LICENSE
+          README.md
+
+    - name: Release - Create release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        #tag_name: ${{ github.run_number }}
+        files: /home/runner/work/a-culfw_${{ github.ref_name }}.zip
